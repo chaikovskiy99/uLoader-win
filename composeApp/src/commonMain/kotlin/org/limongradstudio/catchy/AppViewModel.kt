@@ -12,12 +12,11 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.limongradstudio.catchy.data.remote.models.VideoInfo
 
-private val json =
-  Json {
-    isLenient = true // Enables lenient parsing
-    ignoreUnknownKeys = true // Ignores unknown keys in the JSON
-    coerceInputValues = true // Handles unexpected nulls in non-nullable fields
-  }
+private val json = Json {
+  isLenient = true // Enables lenient parsing
+  ignoreUnknownKeys = true // Ignores unknown keys in the JSON
+  coerceInputValues = true // Handles unexpected nulls in non-nullable fields
+}
 
 sealed class ApiResult<out T> {
   data class Success<R>(val data: R) : ApiResult<R>()
@@ -26,7 +25,7 @@ sealed class ApiResult<out T> {
 }
 
 class AppViewModel : ViewModel() {
-  private val _selectedVideoInfo: MutableState<VideoInfo?> = mutableStateOf(null)
+  private val _selectedVideoInfo: MutableState<String> = mutableStateOf("")
 
   init {
     ClipBoardMonitor {
@@ -35,26 +34,30 @@ class AppViewModel : ViewModel() {
   }
 
   val mediaInfo = Channel<ApiResult<VideoInfo>?>(1)
-
-  val selectedVideoInfo: MutableState<VideoInfo?>
+  val selectedVideoInfo: MutableState<String>
     get() = _selectedVideoInfo
-  private val _videoInfo = mutableStateOf<ApiResult<VideoInfo>?>(null)
-  val videoInfo: MutableState<ApiResult<VideoInfo>?>
-    get() = _videoInfo
 
   private var _url: MutableState<String> = mutableStateOf("")
   val url: State<String> = _url
 
+  fun onEvent(event: AppEvent){
+    when(event){
+      is AppEvent.DownloadEvent ->  download()
+      AppEvent.GetMediaInfoEvent -> onClickGetInfo()
+      is AppEvent.UpdateFormatEvent -> updateSelection(event.formatId)
+      is AppEvent.UpdateUrlEvent -> updateUrl(event.url)
+    }
+  }
 
-  fun updateSelection(videoInfo: VideoInfo) {
+  private fun updateSelection(videoInfo: String) {
     _selectedVideoInfo.value = videoInfo
   }
 
-  fun updateUrl(newUrl: String) {
+  private fun updateUrl(newUrl: String) {
     _url.value = newUrl
   }
 
-  fun download() {
+  private fun download() {
     viewModelScope.launch {
       downloadMedia(_url.value, 1).collect {
         println(it)
@@ -62,19 +65,28 @@ class AppViewModel : ViewModel() {
     }
   }
 
-  fun onClickGetInfo() {
+  private fun onClickGetInfo() {
     viewModelScope.launch {
       try {
-        _videoInfo.value = ApiResult.Loading
         mediaInfo.send(ApiResult.Loading)
         val deferred = async(Dispatchers.IO) { extractMediaInfo(_url.value) }
         val jsonData = deferred.await()
-        _videoInfo.value = ApiResult.Success(json.decodeFromString<VideoInfo>(jsonData!!))
+
         mediaInfo.send(ApiResult.Success(json.decodeFromString<VideoInfo>(jsonData!!)))
       } catch (e: Exception) {
-        _videoInfo.value = ApiResult.Error("Something went wrong!! Please try again!")
+
         mediaInfo.send(ApiResult.Error("Something went wrong!! Please try again!"))
       }
     }
   }
 }
+
+sealed class AppEvent {
+  data object DownloadEvent : AppEvent()
+  data object  GetMediaInfoEvent : AppEvent()
+  data class UpdateFormatEvent(val formatId: String) : AppEvent()
+  data class UpdateUrlEvent(val url: String) : AppEvent()
+}
+
+
+

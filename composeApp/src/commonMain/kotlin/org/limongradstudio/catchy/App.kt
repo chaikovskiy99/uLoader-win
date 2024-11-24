@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.window.WindowState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.limongradstudio.catchy.components.AppBottomBar
@@ -19,18 +20,11 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.darkColorScheme
 import top.yukonga.miuix.kmp.theme.lightColorScheme
 
-enum class BottomNavRoute(val route: String) {
-  Home("Home"), Downloads("Downloads"), Settings("Settings")
-}
-
 @Composable
 @Preview
-fun App() {
-  val currentRoute = remember { mutableStateOf("Home") }
-
-  val updateCurrentRoute = { route: String ->
-    currentRoute.value = route
-  }
+fun App(windowState: WindowState) {
+  val currentRoute = remember { mutableStateOf(0) }
+  val updateCurrentRoute = { newRoute: Int -> currentRoute.value = newRoute }
 
   MiuixTheme(
     colors = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()
@@ -43,33 +37,19 @@ fun App() {
       val vm: AppViewModel = viewModel()
       Box(Modifier.fillMaxSize().padding(it)) {
         when (currentRoute.value) {
-          "Home" -> {
+          0 -> {
             Home(
               modifier = Modifier.fillMaxSize(),
+              parentWindowState = windowState,
               url = vm.url.value,
-              onUpdateUrl = vm::updateUrl,
-              onSearchClicked = vm::onClickGetInfo,
+              event = vm::onEvent,
               mediaInfo = vm.mediaInfo,
-              download = vm::download
             )
           }
 
-          "Downloads" -> {
-            DownloadsScreen()
-          }
-
-          "Settings" -> {
-            SettingsScreen()
-          }
+          1 -> DownloadsScreen()
+          2 -> SettingsScreen()
         }
-        //        val bitmap = imageResource(Res.drawable.img)
-        //        Image(
-        //          modifier = Modifier.blur(
-        //            radius = 16.dp, edgeTreatment = BlurredEdgeTreatment.Unbounded
-        //          ).alpha(0.3f), contentScale = ContentScale.FillBounds,
-        //
-        //          bitmap = bitmap, contentDescription = null
-        //        )
       }
     }
   }

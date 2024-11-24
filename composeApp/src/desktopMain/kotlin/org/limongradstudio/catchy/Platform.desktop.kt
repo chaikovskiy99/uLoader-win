@@ -1,5 +1,7 @@
 package org.limongradstudio.catchy
 
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
 import kotlinx.coroutines.flow.Flow
 import java.nio.file.Paths
 
@@ -25,3 +27,4 @@ actual suspend fun downloadMedia(
         ),
     ).start()
 }
+

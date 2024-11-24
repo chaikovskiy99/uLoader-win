@@ -1,12 +1,13 @@
 package org.limongradstudio.catchy.components
 
+
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -15,67 +16,69 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.InternalComposeUiApi
 import androidx.compose.ui.LocalSystemTheme
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.SystemTheme
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.awt.ComposeDialog
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import androidx.compose.ui.window.DialogWindow
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.decodeToImageBitmap
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.limongradstudio.catchy.ApiResult
+import org.limongradstudio.catchy.VoidFun
+import org.limongradstudio.catchy.VoidParamFun
+import org.limongradstudio.catchy.data.remote.getNetworkImage
 import org.limongradstudio.catchy.data.remote.models.VideoInfo
-import top.yukonga.miuix.kmp.basic.Surface
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import java.net.HttpURLConnection
-import java.net.URL
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.extra.SuperDropdown
 
 
 @OptIn(InternalComposeUiApi::class)
 @Composable
-fun VideoInfoBox(
-  modifier: Modifier = Modifier, download: () -> Unit, videoInfo: VideoInfo
+fun MediaInfoDialog(
+  modifier: Modifier = Modifier,
+  download: VoidFun, videoInfo: VideoInfo,
+  onSelect: VoidParamFun<String>,
 ) {
   println(videoInfo.thumbnail)
   val image = loadImage(videoInfo.thumbnail ?: "")
   val show = remember { mutableStateOf(true) }
-  Column(Modifier.fillMaxSize()) {
-    val theme = LocalSystemTheme.current
-    println(theme)
-    if (show.value) {
-      Dialog(onDismissRequest = {
-        show.value = false
-      }) {
-        Surface(
-          modifier = Modifier.padding(8.dp),
-          shape = RoundedCornerShape(8.dp),
-          shadowElevation = .6f,
-          color = MiuixTheme.colorScheme.background,
-        ) {
-          val textColor = if (theme == SystemTheme.Dark) Color.White else Color.Blue
-          Column(Modifier.padding(16.dp)) {
-            when (image.value) {
-              is ApiResult.Error -> Text("Error loading thumbnail")
-              ApiResult.Loading -> {
-                CircularProgressIndicator()
-              }
+  val theme = LocalSystemTheme.current
+  println(theme)
 
-              is ApiResult.Success -> {
-                Image(
-                  bitmap = (image.value as ApiResult.Success<ImageBitmap>).data,
-                  contentDescription = null
-                )
-                Text(videoInfo.title ?: "", color = textColor)
-                Text(videoInfo.averageRating ?: "", color = textColor)
-              }
+  DialogWindow(
+    create = {
+      ComposeDialog()
+    },
+    dispose = {it.dispose()},
+    content = {
+      Text("hello")
+      when (image.value) {
+        is ApiResult.Error -> Text("Error loading thumbnail")
+        ApiResult.Loading -> {
+          CircularProgressIndicator()
+        }
+
+        is ApiResult.Success -> {
+          Column {
+            FormatPicker(videoInfo = videoInfo, onSelect = onSelect, visible = show.value)
+            Image(
+              bitmap = (image.value as ApiResult.Success<ImageBitmap>).data,
+              contentDescription = null
+            )
+            Row(
+              Modifier.fillMaxSize(), horizontalArrangement = Arrangement.End,
+            ) {
+              AppButton(onClick = {
+                show.value = false
+                println("Show value: ${show.value}")
+
+              }, btnText = "Cancel")
+              AppButton(onClick = {}, btnText = "Download")
             }
           }
         }
       }
-    }
-  }
+
+    },
+  )
 }
 
 @OptIn(ExperimentalResourceApi::class)
@@ -96,23 +99,17 @@ fun loadImage(url: String): State<ApiResult<ImageBitmap>> {
 }
 
 
-suspend fun getNetworkImage(resource: String): ByteArray? = withContext(Dispatchers.IO) {
-  try {
-    // Create a URL instance directly
-    val url = URL(resource)
-
-    // Open connection and read the stream
-    (url.openConnection() as HttpURLConnection).inputStream.buffered().use { inputStream ->
-      inputStream.readAllBytes() // Read all bytes from the InputStream
-    }
-  } catch (e: Exception) {
-    e.printStackTrace() // Log the exception
-    return@withContext null // Return null in case of an error
-  }
-}
-
-@Preview
 @Composable
-fun FormatPicker(modifier: Modifier = Modifier) {
+fun FormatPicker(
+  modifier: Modifier = Modifier, videoInfo: VideoInfo, onSelect: VoidParamFun<String>, visible: Boolean
+) {
+
+  val selectedIndex = remember { mutableStateOf(0) }
+
+  SuperDropdown(title = "",
+    modifier = Modifier.fillMaxWidth(),
+    items = videoInfo.videoFormats?.map { it.format ?: "" } ?: emptyList(),
+    selectedIndex = selectedIndex.value,
+    onSelectedIndexChange = { selectedIndex.value = it })
 }
 
