@@ -55,8 +55,9 @@ actual suspend fun setup(force: Boolean) {
     FFMPEG_BIN to "ffmpeg.zip",
     YT_BINARY_URL to "yt-dlp.exe"
   )
-
   // Persistent folder for storing binaries
+  if (!System.getProperty("os.name").contains("Windows", ignoreCase = true))
+    return;
   val appDataFolder = Paths.get(System.getenv("LOCALAPPDATA"), "MyApp", "binaries").toAbsolutePath()
   appDataFolder.createDirectories()
 
