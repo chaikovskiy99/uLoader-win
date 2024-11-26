@@ -25,9 +25,7 @@ import top.yukonga.miuix.kmp.theme.lightColorScheme
 fun App() {
   val currentRoute = remember { mutableStateOf(0) }
   val updateCurrentRoute = { newRoute: Int -> currentRoute.value = newRoute }
-  LaunchedEffect(Unit) {
-    launch(Dispatchers.IO) { setup() }
-  }
+
   MiuixTheme(
     colors = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()
   ) {

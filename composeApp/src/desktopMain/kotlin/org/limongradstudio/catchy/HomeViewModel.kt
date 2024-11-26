@@ -12,10 +12,8 @@ import org.limongradstudio.catchy.data.remote.models.VideoData
 import org.limongradstudio.catchy.data.remote.models.VideoInfo
 import java.nio.file.Paths
 
-const val YT_BINARY_URL = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
-const val FFMPEG_BIN = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
-const val YT_DLP = "yt-dlp.exe"
-const val FFMPEG = "ffmpeg.exe"
+
+
 const val TMP_DIR_KEY = "java.io.tmpdir"
 
 class HomeViewModel : ViewModel() {

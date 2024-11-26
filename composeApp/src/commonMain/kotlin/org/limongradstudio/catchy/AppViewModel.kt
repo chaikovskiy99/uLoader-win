@@ -1,5 +1,6 @@
 package org.limongradstudio.catchy
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +35,9 @@ class AppViewModel : ViewModel() {
       ClipBoardMonitor {
         updateUrl(it)
       }
+
+      viewModelScope.launch(Dispatchers.IO){ setup(true) }
+
     }
   }
 

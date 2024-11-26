@@ -37,7 +37,7 @@ kotlin {
       implementation(libs.ktor.client.core)
       implementation(libs.ktor.client.okhttp)
       implementation(compose.materialIconsExtended)
-      implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.9.0")
+//      implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.9.0")
       implementation(libs.lifecycle.viewmodel.compose)
       implementation(compose.components.resources)
       implementation(compose.components.uiToolingPreview)
@@ -47,6 +47,7 @@ kotlin {
     }
     desktopMain.dependencies {
       implementation(compose.desktop.currentOs)
+      implementation(libs.androidx.collection)
       implementation(libs.kotlinx.coroutines.swing)
     }
   }

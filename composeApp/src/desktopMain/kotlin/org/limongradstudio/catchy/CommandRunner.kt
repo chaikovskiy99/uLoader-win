@@ -24,7 +24,7 @@ class CommandRunner(
                 process.waitFor()
                 content
             } catch (e: IOException) {
-                println("error while reading")
+                println("error while reading ${e.message}")
                 null
             }
         }

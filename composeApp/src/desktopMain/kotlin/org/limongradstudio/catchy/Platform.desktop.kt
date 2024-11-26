@@ -20,6 +20,12 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 
 actual fun getMediaParser(): MediaParser = DesktopMediaParser()
+const val YT_DLP = "yt-dlp.exe"
+const val FFMPEG = "ffmpeg.exe"
+const val FFMPEG_ENV = "C:\\Users\\Win\\AppData\\Local\\Catchy\\binaries\\ffmpeg-master-latest-win64-gpl\\bin"
+const val YT_ENV = "C:\\Users\\Win\\AppData\\Local\\Catchy\\binaries"
+const val YT_BINARY_URL = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
+const val FFMPEG_BIN_URL = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
 
 class DesktopMediaParser() : MediaParser {
 
@@ -29,9 +35,16 @@ class DesktopMediaParser() : MediaParser {
   }
 
   override suspend fun <T> extractInfo(resource: String): T? {
-    val command = CommandRunner(listOf("yt-dlp", "-j", resource))
-    val text = command.readText()
-    return text as T
+    if(System.getProperty("os.name").contains("Windows", ignoreCase = true)){
+//      val appDataFolder = Paths.get(System.getenv("LOCALAPPDATA"), "MyApp", "binaries").toAbsolutePath()
+      val command = CommandRunner(listOf(YT_DLP, "-j", resource))
+      val text = command.readText()
+      return text as T
+    }else {
+      val command = CommandRunner(listOf("yt-dlp", "-j", resource))
+      val text = command.readText()
+      return text as T
+    }
   }
 
   override suspend fun <T> download(resource: String, selectedFormatId: Int): T {
@@ -52,15 +65,18 @@ class DesktopMediaParser() : MediaParser {
 
 actual suspend fun setup(force: Boolean) {
   val urls = listOf(
-    FFMPEG_BIN to "ffmpeg.zip",
+    FFMPEG_BIN_URL to "ffmpeg.zip",
     YT_BINARY_URL to "yt-dlp.exe"
   )
-  // Persistent folder for storing binaries
-  if (!System.getProperty("os.name").contains("Windows", ignoreCase = true))
-    return;
-  val appDataFolder = Paths.get(System.getenv("LOCALAPPDATA"), "MyApp", "binaries").toAbsolutePath()
-  appDataFolder.createDirectories()
 
+
+  val isWindows = System.getProperty("os.name").contains("Windows", ignoreCase = true)
+  if (!isWindows)
+    return;
+
+  // Persistent folder for storing binaries
+  val appDataFolder = Paths.get(System.getenv("LOCALAPPDATA"), "Catchy", "binaries").toAbsolutePath()
+  appDataFolder.createDirectories()
   coroutineScope {
     for ((url, fileName) in urls) {
       launch {
@@ -105,7 +121,8 @@ actual suspend fun setup(force: Boolean) {
     // Add extracted folder to PATH environment variable
     println("Setting up environment variables...")
     try {
-      addToEnvironmentPath(appDataFolder.toString())
+      addToEnvironmentPath(FFMPEG_ENV)
+      addToEnvironmentPath(YT_ENV)
       println("Environment variable PATH updated successfully.")
     } catch (e: Exception) {
       println("Error updating environment variables: ${e.message}")
@@ -180,5 +197,4 @@ fun extractZip(zipInput: String, outputPath: String) {
     println("Error extracting ZIP: ${e.message}")
   }
 }
-
 
