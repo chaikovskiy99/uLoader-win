@@ -1,8 +1,8 @@
 [versions]
 agp = "8.7.2"
-android-compileSdk = "34"
-android-minSdk = "24"
-android-targetSdk = "34"
+android-compileSdk = "35"
+android-minSdk = "26"
+android-targetSdk = "35"
 androidx-activityCompose = "1.9.3"
 androidx-appcompat = "1.7.0"
 androidx-constraintlayout = "2.2.0"
@@ -14,12 +14,15 @@ androidx-test-junit = "1.2.1"
 compose-multiplatform = "1.7.0"
 junit = "4.13.2"
 kotlin = "2.0.21"
+ktor = "3.0.1"
 kotlinx-coroutines = "1.9.0"
 kotlinxSerializationJson = "1.6.0"
 lifecycleViewmodelCompose = "2.8.2"
 miuix = "0.3.0"
 
 [libraries]
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

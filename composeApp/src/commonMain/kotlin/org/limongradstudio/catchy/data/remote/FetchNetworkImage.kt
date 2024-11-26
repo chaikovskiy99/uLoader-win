@@ -1,21 +1,28 @@
 package org.limongradstudio.catchy.data.remote
 
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.request.get
+import io.ktor.client.statement.readRawBytes
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.net.HttpURLConnection
-import java.net.URL
+
+
+object Network {
+  val client = HttpClient(OkHttp){
+    engine { dispatcher = Dispatchers.IO }
+  }
+}
 
 suspend fun getNetworkImage(resource: String): ByteArray? = withContext(Dispatchers.IO) {
   try {
-    // Create a URL instTimber.e(e, "Error fetching image: %s", resource)Timber.e(e, "Error fetching image: %s", resource)ance directly
-    val url = URL(resource)
-
-    // Open connection and read the stream
-    (url.openConnection() as HttpURLConnection).inputStream.buffered().use { inputStream ->
-      inputStream.readAllBytes() // Read all bytes from the InputStream
-    }
+    val response = Network.client.get(resource)
+    if(response.status != HttpStatusCode.OK)
+      return@withContext null
+    return@withContext response.readRawBytes()
   } catch (e: Exception) {
-    e.printStackTrace() // Log the exception
-    return@withContext null // Return null in case of an error
+    e.printStackTrace()
+    return@withContext null
   }
 }

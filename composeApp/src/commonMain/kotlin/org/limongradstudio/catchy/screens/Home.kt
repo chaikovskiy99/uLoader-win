@@ -5,41 +5,47 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.IconButton
-import androidx.compose.material.Surface
-import androidx.compose.material.contentColorFor
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.WindowState
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
+import org.jetbrains.skia.Bitmap
+import org.jetbrains.skia.Image
 import org.limongradstudio.catchy.ApiResult
 import org.limongradstudio.catchy.AppEvent
 import org.limongradstudio.catchy.components.AppButton
-import org.limongradstudio.catchy.components.loadImage
+import org.limongradstudio.catchy.data.remote.getNetworkImage
 import org.limongradstudio.catchy.data.remote.models.VideoInfo
 import top.yukonga.miuix.kmp.basic.Box
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.extra.SuperDialog
+import top.yukonga.miuix.kmp.extra.SuperDropdown
+import top.yukonga.miuix.kmp.extra.SuperSwitch
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.utils.MiuixPopupUtil.Companion.dismissDialog
 
 @Composable
 fun Home(
@@ -47,7 +53,6 @@ fun Home(
   url: String,
   event: (AppEvent) -> Unit,
   mediaInfo: Channel<ApiResult<VideoInfo>?>,
-  parentWindowState: WindowState
 ) {
 
   val defaultInnerPadding = DpSize(8.dp, 10.dp)
@@ -91,51 +96,9 @@ fun Home(
 
         is ApiResult.Success -> {
           val media = (videoInfo.value as ApiResult.Success<VideoInfo>).data
+          val dialogState = mutableStateOf(true)
           if (show.value) {
-            Dialog(onDismissRequest = { show.value = false }) {
-              Surface(color = Color.Gray, contentColor = contentColorFor(Color.Gray)) {
-                Box(modifier = Modifier.padding(16.dp)) {
-                  val image = loadImage(media.thumbnail ?: "")
-                  when (image.value) {
-                    is ApiResult.Error -> Text("Error loading thumbnail")
-                    ApiResult.Loading -> {
-                      CircularProgressIndicator()
-                    }
-
-                    is ApiResult.Success -> {
-                      val imageBitmap = (image.value as ApiResult.Success<ImageBitmap>).data
-                      val expanded = remember { mutableStateOf(false) }
-                      Column {
-                        Box(modifier = Modifier.fillMaxSize().wrapContentSize(Alignment.TopStart)) {
-                          androidx.compose.material3.DropdownMenu(expanded = expanded.value,
-                            onDismissRequest = { expanded.value = false }) {
-                            media.videoFormats?.forEach {
-                              DropdownMenuItem(
-                                text = { Text(it.formatId.toString(), color = Color.Blue) },
-                                onClick = {})
-                            }
-                          }
-                        }
-                        Image(imageBitmap, "")
-                        Row(
-                          Modifier.fillMaxSize(), horizontalArrangement = Arrangement.End,
-                        ) {
-                          AppButton(onClick = {
-                            show.value = false
-                            println("Show value: ${show.value}")
-
-                          }, btnText = "Cancel")
-                          AppButton(
-                            onClick = { event(AppEvent.DownloadEvent) },
-                            btnText = "Download"
-                          )
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+            dialog2(dialogState, media)
           }
         }
 
@@ -146,5 +109,75 @@ fun Home(
 }
 
 
+@Composable
+fun dialog2(showDialog: MutableState<Boolean>, videoInfo: VideoInfo) {
+  val dropdownOptions = videoInfo.videoFormats?.map { it.formatId ?: "" } ?: emptyList()
+  val dropdownSelectedOption = remember { mutableStateOf(0) }
+  var miuixSuperSwitchState by remember { mutableStateOf(false) }
+  val imageState = remember { mutableStateOf<ImageBitmap?>(null) }
+  if(videoInfo.thumbnail != null){
+    LaunchedEffect(Unit){
+      val bytes=  getNetworkImage(videoInfo.thumbnail!!)
+      if(bytes != null){
+        println(bytes)
+        imageState.value = Image.makeFromEncoded(bytes).toComposeImageBitmap()
+      }
+    }
+  }
 
 
+  SuperDialog(
+    title = "Dialog 2",
+    show = showDialog,
+    onDismissRequest = {
+      dismissDialog(showDialog)
+    }
+  ) {
+    Card(
+      color = MiuixTheme.colorScheme.secondaryContainer,
+    ) {
+      if(imageState.value != null){
+        println(imageState.value)
+        Image(
+          bitmap = imageState.value!!,
+          contentDescription = "Thumbnail",
+        )
+      }
+      SuperDropdown(
+        title = "Dropdown",
+        items = dropdownOptions,
+        selectedIndex = dropdownSelectedOption.value,
+        onSelectedIndexChange = { newOption -> dropdownSelectedOption.value = newOption },
+        defaultWindowInsetsPadding = false
+      )
+      SuperSwitch(
+        title = "Switch",
+        checked = miuixSuperSwitchState,
+        onCheckedChange = {
+          miuixSuperSwitchState = it
+        }
+      )
+    }
+    Spacer(Modifier.height(12.dp))
+    Row(
+      horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+      TextButton(
+        text = "Cancel",
+        onClick = {
+          dismissDialog(showDialog)
+        },
+        modifier = Modifier.weight(1f)
+      )
+      Spacer(Modifier.width(20.dp))
+      TextButton(
+        text = "Confirm",
+        onClick = {
+          dismissDialog(showDialog)
+        },
+        modifier = Modifier.weight(1f),
+        colors = ButtonDefaults.textButtonColorsPrimary()
+      )
+    }
+  }
+}

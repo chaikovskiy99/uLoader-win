@@ -11,6 +11,6 @@ import top.yukonga.miuix.kmp.basic.TextField
 @Composable
 fun SettingsScreen(modifier: Modifier = Modifier) {
   Column(modifier = modifier.padding(16.dp)) {
-    TextField("Settings", {}, modifier = Modifier.fillMaxWidth())
+
   }
 }

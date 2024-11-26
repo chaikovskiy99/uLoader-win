@@ -34,6 +34,10 @@ kotlin {
       implementation(compose.material)
       implementation(compose.material3)
       implementation(compose.ui)
+      implementation(libs.ktor.client.core)
+      implementation(libs.ktor.client.okhttp)
+      implementation(compose.materialIconsExtended)
+      implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.9.0")
       implementation(libs.lifecycle.viewmodel.compose)
       implementation(compose.components.resources)
       implementation(compose.components.uiToolingPreview)
@@ -75,10 +79,7 @@ android {
   }
 }
 
-dependencies {
-  implementation(project(":composeApp"))
-  debugImplementation(compose.uiTooling)
-}
+
 
 compose.desktop {
   application {

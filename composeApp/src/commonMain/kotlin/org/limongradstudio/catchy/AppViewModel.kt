@@ -8,9 +8,11 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.limongradstudio.catchy.data.remote.models.VideoInfo
+import top.yukonga.miuix.kmp.utils.Platform
 
 private val json = Json {
   isLenient = true // Enables lenient parsing
@@ -26,10 +28,12 @@ sealed class ApiResult<out T> {
 
 class AppViewModel : ViewModel() {
   private val _selectedVideoInfo: MutableState<String> = mutableStateOf("")
-
+  private val parser: MediaParser get() = getMediaParser()
   init {
-    ClipBoardMonitor {
-      updateUrl(it)
+    if(getPlatform().name == Platform.Desktop.name){
+      ClipBoardMonitor {
+        updateUrl(it)
+      }
     }
   }
 
@@ -59,7 +63,7 @@ class AppViewModel : ViewModel() {
 
   private fun download() {
     viewModelScope.launch {
-      downloadMedia(_url.value, 1).collect {
+      parser.download<Flow<String>>(_url.value, 1).collect {
         println(it)
       }
     }
@@ -69,7 +73,7 @@ class AppViewModel : ViewModel() {
     viewModelScope.launch {
       try {
         mediaInfo.send(ApiResult.Loading)
-        val deferred = async(Dispatchers.IO) { extractMediaInfo(_url.value) }
+        val deferred = async(Dispatchers.IO) { parser.extractInfo<String?>(_url.value) }
         val jsonData = deferred.await()
 
         mediaInfo.send(ApiResult.Success(json.decodeFromString<VideoInfo>(jsonData!!)))

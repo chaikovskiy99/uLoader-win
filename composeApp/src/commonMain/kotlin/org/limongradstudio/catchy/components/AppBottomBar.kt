@@ -1,7 +1,7 @@
 package org.limongradstudio.catchy.components
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
@@ -18,7 +18,7 @@ fun AppBottomBar(
 
   NavigationBar(listOf(
     NavigationItem(label = "Home", Icons.Default.Home),
-    NavigationItem(label = "Downloads", Icons.Default.ArrowDropDown),
+    NavigationItem(label = "Downloads", Icons.Default.Download),
     NavigationItem(label = "Settings", Icons.Default.Settings),
   ),
     showDivider = true,

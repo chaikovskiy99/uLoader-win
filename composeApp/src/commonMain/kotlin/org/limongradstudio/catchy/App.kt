@@ -4,12 +4,13 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.window.WindowState
 import androidx.lifecycle.viewmodel.compose.viewModel
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.limongradstudio.catchy.components.AppBottomBar
 import org.limongradstudio.catchy.screens.DownloadsScreen
 import org.limongradstudio.catchy.screens.Home
@@ -21,11 +22,12 @@ import top.yukonga.miuix.kmp.theme.darkColorScheme
 import top.yukonga.miuix.kmp.theme.lightColorScheme
 
 @Composable
-@Preview
-fun App(windowState: WindowState) {
+fun App() {
   val currentRoute = remember { mutableStateOf(0) }
   val updateCurrentRoute = { newRoute: Int -> currentRoute.value = newRoute }
-
+  LaunchedEffect(Unit) {
+    launch(Dispatchers.IO) { setup() }
+  }
   MiuixTheme(
     colors = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()
   ) {
@@ -40,7 +42,6 @@ fun App(windowState: WindowState) {
           0 -> {
             Home(
               modifier = Modifier.fillMaxSize(),
-              parentWindowState = windowState,
               url = vm.url.value,
               event = vm::onEvent,
               mediaInfo = vm.mediaInfo,

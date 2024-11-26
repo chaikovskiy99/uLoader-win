@@ -1,14 +1,16 @@
 package org.limongradstudio.catchy
 
-import kotlinx.coroutines.flow.Flow
-
 interface Platform {
-    val name: String
+  val name: String
 }
 
 expect fun getPlatform(): Platform
 
-expect suspend fun extractMediaInfo(url: String) : String?
+expect fun getMediaParser(): MediaParser
 
-expect suspend fun downloadMedia(url: String, selectedFormatId: Int) : Flow<String>
+interface MediaParser {
+  suspend fun <T> extractInfo(resource: String): T?
+  suspend fun <T> download(resource: String, selectedFormatId: Int): T
+}
 
+expect suspend fun setup(force: Boolean = false)
